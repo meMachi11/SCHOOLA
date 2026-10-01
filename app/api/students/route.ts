@@ -1,6 +1,31 @@
-import { db,fail,sameOrigin } from '../../../lib/server';
-import {samples,classes} from '../../../lib/model';
-import {z} from 'zod';
-const schema=z.object({id:z.string().max(80),first:z.string().trim().min(1).max(80),last:z.string().trim().min(1).max(80),dob:z.string().refine(v=>!v||(/^\d{4}-\d{2}-\d{2}$/.test(v)&&!isNaN(Date.parse(v))&&Date.parse(v)<=Date.now())),gender:z.enum(['F','M']),className:z.enum(classes as [string,...string[]]),year:z.enum(['2025–2026','2026–2027','2027–2028']),status:z.enum(['active','pending','archived']),address:z.string().max(500),notes:z.string().max(3000),parents:z.array(z.object({name:z.string().trim().min(1).max(120),relation:z.enum(['mother','father','guardian']),phone:z.string().max(40),email:z.union([z.literal(''),z.string().email()])})).max(4),demo:z.boolean().optional()});
-export async function GET(){try{const data=await db().prepare('SELECT data FROM students ORDER BY updated DESC').all<{data:string}>();return Response.json(data.results.map(r=>JSON.parse(r.data)),{headers:{'Cache-Control':'no-store'}});}catch(e){return fail(e)}}
-export async function POST(req:Request){try{sameOrigin(req);const body=await req.json();if(typeof body==='object' && body!==null && 'action' in body && body.action==='sample'){await db().batch(samples.map(s=>db().prepare('INSERT OR IGNORE INTO students (id,data,updated) VALUES (?,?,?)').bind(s.id,JSON.stringify(s),new Date().toISOString())));return Response.json({ok:true})}const parsed=schema.safeParse(body);if(!parsed.success)return Response.json({error:'Vérifiez les informations du formulaire.'},{status:400});const s={...parsed.data,id:parsed.data.id||crypto.randomUUID()};await db().prepare('INSERT INTO students (id,data,updated) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,updated=excluded.updated').bind(s.id,JSON.stringify(s),new Date().toISOString()).run();return Response.json(s);}catch(e){return fail(e)}}
+import {
+  json,
+  requireUser,
+  responseError,
+  ApiError,
+} from "../../../lib/school/auth";
+import { allRecords } from "../../../lib/school/store";
+import { canRead } from "../../../lib/school/policy";
+export async function GET(req: Request) {
+  try {
+    const user = await requireUser(req),
+      records = await allRecords();
+    return json(
+      records
+        .filter((r) => r.kind === "students" && canRead(user, r, records))
+        .map((r) =>
+          user.role === "admin" ? r : { ...r, data: { ...r.data, notes: "" } },
+        ),
+    );
+  } catch (e) {
+    return responseError(e);
+  }
+}
+export async function POST() {
+  return responseError(
+    new ApiError(
+      410,
+      "Utilisez /api/school avec un identifiant de synchronisation.",
+    ),
+  );
+}

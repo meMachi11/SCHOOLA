@@ -1,3 +1,11 @@
+# Scola school workspace
+
+French/Arabic school management with students, administration, attendance, homework, grades, fees, announcements, messaging, files, dashboard, roles, authentication, Web Push and PWA/offline synchronization.
+
+See [Operations and setup](docs/OPERATIONS.md) and [API reference](docs/API.md). Email recovery needs a connected delivery provider; device push requires browser permission.
+
+---
+
 # vinext-starter
 
 A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.

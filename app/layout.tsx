@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Scola · Gestion des élèves",
+  title: "Scola · Espace école",
   description: "Un espace dédié aux élèves, aux familles et à la vie scolaire.",
-  other: {
-    "codex-preview": "development",
-  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Scola", statusBarStyle: "default" },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
