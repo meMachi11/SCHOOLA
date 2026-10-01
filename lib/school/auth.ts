@@ -180,15 +180,41 @@ export function checkOrigin(req: Request) {
   }
 }
 export async function body(req: Request) {
-  if (Number(req.headers.get("content-length") || 0) > 65536)
-    throw new ApiError(413, "Requête trop volumineuse.");
-  const text = await req.text();
-  if (text.length > 65536) throw new ApiError(413, "Requête trop volumineuse.");
+  const reader = req.body?.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > 65536) {
+          await reader.cancel();
+          throw new ApiError(413, "Requête trop volumineuse.");
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+  const payload = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    payload.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const text = new TextDecoder().decode(payload);
+  let value: unknown;
   try {
-    return JSON.parse(text) as Record<string, unknown>;
+    value = JSON.parse(text);
   } catch {
     throw new ApiError(400, "JSON invalide.");
   }
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new ApiError(400, "Objet JSON requis.");
+  return value as Record<string, unknown>;
 }
 export function responseError(e: unknown) {
   if (e instanceof ApiError)

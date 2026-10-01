@@ -19,10 +19,12 @@ async function call(
   const response = await fetch(base + path, {
     method,
     headers: {
-      ...(value ? { "Content-Type": "application/json", Origin: base } : {}),
+      ...(value !== undefined
+        ? { "Content-Type": "application/json", Origin: base }
+        : {}),
       ...headers,
     },
-    body: value ? JSON.stringify(value) : undefined,
+    body: value !== undefined ? JSON.stringify(value) : undefined,
   });
   const text = await response.text();
   assert.equal(
@@ -34,6 +36,11 @@ async function call(
 }
 const snapshot = await call("/api/school");
 assert.equal(snapshot.user.role, "admin");
+for (const route of ["/api/auth", "/api/school"]) {
+  for (const value of [null, [], "invalid", 1, true])
+    await call(route, "POST", value, owner, 400);
+}
+
 await call("/api/school", "GET", undefined, {}, 401);
 await call("/api/students", "GET", undefined, {}, 401);
 await call("/api/documents?id=unknown", "GET", undefined, {}, 401);
