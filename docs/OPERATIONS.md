@@ -4,7 +4,7 @@ Scola is a French/Arabic school workspace. It uses Cloudflare D1 for school reco
 
 ## First administrator and access
 
-Set `SCOLA_OWNER_EMAIL` to the verified Site owner's email, then sign in with ChatGPT. Only that identity can bootstrap the first administrator. Every additional user needs an account created by an administrator. User roles and class/student assignments are checked on the server; disabling an account revokes both password and ChatGPT access. The owner cannot lose administrator access.
+Set `SCOLA_OWNER_EMAIL` to the verified Site owner's email, then sign in with ChatGPT. That identity can bootstrap the first administrator. To authorize a co-administrator before their first login, add their exact email to the comma-separated `SCOLA_INITIAL_ADMIN_EMAILS` runtime setting and grant them Site access. Their first verified ChatGPT sign-in creates an administrator account and records an audit event. This setting only creates new accounts: existing roles and deactivated accounts are never overridden. Removing an email from the setting does not revoke an already-created account; manage that account in Users & permissions. Other users need an account created by an administrator. User roles and class/student assignments are checked on the server; disabling an account revokes both password and ChatGPT access. The owner cannot lose administrator access.
 
 The existing Site audience remains unchanged. Application roles do not automatically grant access through the Site's workspace sharing boundary. Add parents/teachers to Site sharing as appropriate before they can reach its login screen.
 
