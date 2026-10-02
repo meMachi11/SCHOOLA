@@ -1,3 +1,4 @@
+import { isDemoId } from "./demo-marker";
 import { db } from "../server";
 import { ApiError, bytes, decode, encode, now } from "./auth";
 const buffer = (v: Uint8Array) => Uint8Array.from(v).buffer;
@@ -197,6 +198,7 @@ export async function pushUser(
   body: string,
   link: string,
 ) {
+  if (isDemoId(userId)) return { devices: 0, sent: 0, at: now() };
   const rows = (
     await db()
       .prepare("SELECT * FROM school_push WHERE user_id=?")

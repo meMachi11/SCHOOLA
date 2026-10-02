@@ -1,3 +1,4 @@
+import { isDemoId, isDemoRecord } from "./demo-marker";
 import { db } from "../server";
 import { now, userFrom, type UserRow } from "./auth";
 import { canRead } from "./policy";
@@ -10,6 +11,7 @@ export async function deliver(
   body: string,
   link: string,
 ) {
+  if (isDemoId(user.id)) return;
   const r = await db()
     .prepare(
       "INSERT OR IGNORE INTO school_notifications (id,user_id,title,body,link,created) VALUES (?,?,?,?,?,?)",
@@ -23,6 +25,7 @@ export async function notifyChange(
   record: RecordItem,
   old?: RecordItem,
 ) {
+  if (isDemoRecord(record)) return;
   if (
     ![
       "attendance",
@@ -52,17 +55,15 @@ export async function notifyChange(
       .all<UserRow>()
   ).results.map(userFrom);
   const raw = (
-    await db()
-      .prepare("SELECT * FROM school_records WHERE deleted=0")
-      .all<{
-        id: string;
-        kind: RecordItem["kind"];
-        data: string;
-        version: number;
-        author_id: string;
-        created: string;
-        updated: string;
-      }>()
+    await db().prepare("SELECT * FROM school_records WHERE deleted=0").all<{
+      id: string;
+      kind: RecordItem["kind"];
+      data: string;
+      version: number;
+      author_id: string;
+      created: string;
+      updated: string;
+    }>()
   ).results;
   const records = raw.map((r) => ({
     id: r.id,
@@ -113,7 +114,8 @@ export async function reminders(
   const today = now().slice(0, 10);
   let count = 0;
   for (const invoice of records.filter(
-    (r) => r.kind === "invoices" && String(r.data.due) < today,
+    (r) =>
+      r.kind === "invoices" && !isDemoRecord(r) && String(r.data.due) < today,
   )) {
     const paid = records
       .filter((p) => p.kind === "payments" && p.data.invoiceId === invoice.id)

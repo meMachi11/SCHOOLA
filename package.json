@@ -16,7 +16,8 @@
     "verify:grades": "node scripts/verify-grades.mjs",
     "verify:push": "node scripts/verify-push.mjs",
     "verify:school": "node scripts/verify-school.mjs",
-    "verify:requests": "node scripts/verify-requests.mjs"
+    "verify:requests": "node scripts/verify-requests.mjs",
+    "verify:demo": "node scripts/verify-demo.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

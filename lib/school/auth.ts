@@ -12,6 +12,7 @@ export class ApiError extends Error {
 export type Runtime = {
   SCOLA_OWNER_EMAIL?: string;
   SCOLA_INITIAL_ADMIN_EMAILS?: string;
+  SCOLA_DEMO_DATA?: string;
   SCOLA_ORIGIN?: string;
   EMAIL_PROVIDER?: string;
   EMAIL_API_KEY?: string;
@@ -136,7 +137,9 @@ export async function currentUser(req: Request): Promise<User | null> {
     const initialAdmins = [
       runtime().SCOLA_OWNER_EMAIL ?? "",
       ...(runtime().SCOLA_INITIAL_ADMIN_EMAILS ?? "").split(","),
-    ].map((value) => value.trim().toLowerCase()).filter(Boolean);
+    ]
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean);
     if (!r && initialAdmins.includes(email)) {
       const created = await db()
         .prepare(
@@ -154,8 +157,7 @@ export async function currentUser(req: Request): Promise<User | null> {
         .prepare("SELECT * FROM school_users WHERE email=?")
         .bind(email)
         .first<UserRow>();
-      if (created.meta.changes && r)
-        await audit(r.id, "admin.bootstrap", r.id);
+      if (created.meta.changes && r) await audit(r.id, "admin.bootstrap", r.id);
     }
     if (r && !r.identity_id) {
       await db()

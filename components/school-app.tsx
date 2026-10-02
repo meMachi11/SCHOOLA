@@ -1099,6 +1099,19 @@ export default function SchoolApp() {
               ])}
             </div>
           )}
+          {records.some((r) => r.data.demo) && (
+            <div className="demo-banner" role="note">
+              <strong>
+                {t(["École virtuelle · Démo", "مدرسة افتراضية · تجريبي"])}
+              </strong>
+              <span>
+                {t([
+                  "Les dossiers Démo sont fictifs. Explorez les modules et les bulletins ; aucun email ou push réel n’est envoyé pour ces exemples.",
+                  "ملفات التجربة خيالية. اكتشف الميزات والتقارير؛ لا تُرسل رسائل أو إشعارات فعلية لهذه الأمثلة.",
+                ])}
+              </span>
+            </div>
+          )}
           {page === "administration" && (
             <div className="module-tabs">
               {(
@@ -1319,6 +1332,11 @@ export default function SchoolApp() {
                                     </span>
                                   )}
                                   <strong>{display(r, key)}</strong>
+                                  {r.data.demo && (
+                                    <span className="demo-badge">
+                                      {t(["Démo", "تجريبي"])}
+                                    </span>
+                                  )}
                                 </button>
                               ) : key === "status" ? (
                                 <span className={"status " + r.data.status}>
@@ -1989,6 +2007,30 @@ export default function SchoolApp() {
                 </form>
               </div>
               {admin && (
+                <div className="directory settings-card">
+                  <h2>{t(["École virtuelle", "المدرسة الافتراضية"])}</h2>
+                  <p>
+                    {t([
+                      "Exemples connectés : élèves, familles, classes, présence, devoirs, notes, factures, reçus et documents PDF. Les comptes fictifs n’ont pas de mot de passe et aucune communication externe n’est envoyée.",
+                      "أمثلة مترابطة للتلاميذ والعائلات والأقسام والحضور والواجبات والنقط والفواتير والوثائق. الحسابات الخيالية بلا كلمات مرور ولا تُرسل اتصالات خارجية.",
+                    ])}
+                  </p>
+                  <button
+                    className="secondary"
+                    disabled={busy || !online}
+                    onClick={() =>
+                      run(
+                        () =>
+                          request("/api/school", "POST", { action: "demo" }),
+                        ["Exemples disponibles", "الأمثلة جاهزة"],
+                      )
+                    }
+                  >
+                    {t(["Charger les exemples", "تحميل الأمثلة"])}
+                  </button>
+                </div>
+              )}
+              {admin && (
                 <div className="directory settings-card audit-card">
                   <h2>{t(["Journal de sécurité", "سجل الأمان"])}</h2>
                   <div className="table-scroll">
@@ -2346,6 +2388,14 @@ export default function SchoolApp() {
                     ? t(["Reçu de paiement", "إيصال الدفع"])
                     : recordName(detail)}
                 </h3>
+                {detail.data.demo && (
+                  <p className="demo-print-label">
+                    {t([
+                      "DÉMONSTRATION · DONNÉES FICTIVES",
+                      "عرض تجريبي · بيانات خيالية",
+                    ])}
+                  </p>
+                )}
                 <p>
                   {detail.id} ·{" "}
                   {new Date(detail.created).toLocaleDateString(

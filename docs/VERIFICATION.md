@@ -58,3 +58,9 @@ node scripts/verify-school.mjs http://127.0.0.1:4173 owner@example.test
 Run the API script only against a disposable local database with `SCOLA_OWNER_EMAIL=owner@example.test`; it creates test records. Apply migrations once in order. Start a fresh Wrangler preview after rebuilding. Additional browser, offline/conflict, legacy-upgrade, reset-token and mocked-email harnesses were executed for this verification; their environment-specific files are under `/tmp/schoola-tests-*.mjs` in this execution workspace. Print screenshots are in `outputs/test-report-print.png` and `outputs/test-receipt-print.png`.
 
 This report records the checks performed and their limits; it is not a guarantee that every possible input, browser or device will work.
+
+## Virtual dataset verification — 2026-10-02
+
+Passed typecheck, lint, production build, grade weighting, Web Push encryption and bounded-request tests. The new local `verify:demo` integration check passed for all 15 record types, eight student profiles, nine fictional accounts, three PDF downloads, relationship integrity, fee balances, canonical edits, demo-marker propagation, repeated loading, real-data preservation, admin-only loading and suppression of real-parent notices/demo reminders. The existing school API regression script also passed against the same disposable state (using the demo test owner's identity).
+
+Chromium checks passed for every navigation screen in French and Arabic, the demo banner and record badges, printed fictional-data label, RTL and a 390px mobile viewport, without browser exceptions. Independent `pdfinfo`/`pdftotext` parsing confirmed the sample homework PDF is a valid one-page PDF and includes the fictional-data notice. No real email or device push was sent. The production dataset is initialized on the next signed-in administrator snapshot after publication; local results do not constitute a live external-service test.

@@ -1,3 +1,4 @@
+import { demoReferences, isDemoId } from "./demo-marker";
 import { db } from "../server";
 import { ApiError, audit, hash, now, userFrom, type UserRow } from "./auth";
 import { canMessage, canRead, canWrite } from "./policy";
@@ -265,7 +266,8 @@ export async function saveRecord(user: User, input: Record<string, unknown>) {
   await validateRelations(kind, data, records, users, user);
   if (kind === "students" && old?.data.legacyParents)
     data.legacyParents = old.data.legacyParents;
-  if (kind === "students" && old?.data.demo) data.demo = old.data.demo;
+  if (old?.data.demo || isDemoId(id) || demoReferences(data, records))
+    data.demo = true;
   const expected = Number(input.version ?? 0);
   if (old && expected !== old.version)
     throw new ApiError(

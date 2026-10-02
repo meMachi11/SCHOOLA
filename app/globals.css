@@ -3072,3 +3072,34 @@ body {
   margin-top: 5px;
   color: #76829a;
 }
+
+.demo-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 15px 18px;
+  margin-bottom: 22px;
+  border: 1px dashed #9cb9df;
+  background: #f1f7ff;
+  border-radius: 12px;
+  color: #27456e;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.demo-banner strong {
+  font-size: 14px;
+}
+.demo-badge {
+  display: inline-flex;
+  padding: 2px 6px;
+  background: #edf4ff;
+  color: #3a608a;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.demo-print-label {
+  font-weight: 700;
+  color: #27456e;
+}

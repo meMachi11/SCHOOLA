@@ -1,3 +1,4 @@
+import { isDemoId } from "../../../lib/school/demo-marker";
 import { db } from "../../../lib/server";
 import {
   ApiError,
@@ -101,7 +102,7 @@ export async function POST(req: Request) {
         .prepare("SELECT * FROM school_users WHERE email=? AND active=1")
         .bind(email)
         .first<UserRow>();
-      if (user) {
+      if (user && !isDemoId(user.id)) {
         const token = randomToken();
         await db()
           .prepare(

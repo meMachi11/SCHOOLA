@@ -1,3 +1,4 @@
+import { loadDemo } from "../../../lib/school/demo";
 import { db } from "../../../lib/server";
 import {
   ApiError,
@@ -23,6 +24,7 @@ export async function GET(req: Request) {
   try {
     const user = await requireUser(req);
     await importLegacy(user);
+    await loadDemo(user);
     const records = await allRecords(),
       users = await allUsers();
     const visible = records
@@ -140,6 +142,12 @@ export async function POST(req: Request) {
     checkOrigin(req);
     const user = await requireUser(req);
     const input = await body(req);
+    if (input.action === "demo") {
+      if (user.role !== "admin")
+        throw new ApiError(403, "Administrateur requis.");
+      await loadDemo(user, true);
+      return json({ ok: true });
+    }
     if (input.action === "email") {
       if (user.role !== "admin")
         throw new ApiError(403, "Administrateur requis.");
