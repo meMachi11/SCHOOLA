@@ -1,4 +1,5 @@
 "use client";
+import { accessAreas, canOpenPage } from "../lib/school/access";
 import {
   useCallback,
   useEffect,
@@ -135,8 +136,9 @@ const statusLabels: Record<string, Label> = {
 };
 export default function SchoolApp() {
   const [pendingReviewId, setPendingReviewId] = useState<string | null>(null);
+  const [accessRole, setAccessRole] = useState<User["role"]>("admin");
   const [lang, setLang] = useState<"fr" | "ar">("fr"),
-    [page, setPage] = useState<Page>("dashboard"),
+    [requestedPage, setPage] = useState<Page>("dashboard"),
     [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -166,6 +168,10 @@ export default function SchoolApp() {
   const syncLock = useRef(false),
     offlineRef = useRef(false),
     snapshotRef = useRef<Snapshot | null>(null);
+  const page =
+    snapshot && !canOpenPage(snapshot.user.role, requestedPage)
+      ? "dashboard"
+      : requestedPage;
   const t = useCallback((label: Label) => label[lang === "ar" ? 1 : 0], [lang]);
   const message = useCallback(
     (e: unknown) =>
@@ -231,6 +237,9 @@ export default function SchoolApp() {
       const params = new URLSearchParams(location.search);
       const token = params.get("reset") ?? "";
       const requestedPage = params.get("module");
+      const requestedAccess = params.get("access");
+      if (roles.includes(requestedAccess as User["role"]))
+        setAccessRole(requestedAccess as User["role"]);
       try {
         const value = await refresh();
         if (!alive) return;
@@ -345,6 +354,7 @@ export default function SchoolApp() {
     return String(value ?? "—");
   }
   function navigate(next: Page) {
+    if (user && !canOpenPage(user.role, next)) return;
     setPage(next);
     setMobile(false);
     setQuery("");
@@ -822,6 +832,28 @@ export default function SchoolApp() {
           </p>
         </section>
         <section className="auth-card">
+          {authMode === "login" && (
+            <div
+              className="access-picker"
+              aria-label={t(["Choisir un espace", "اختيار المساحة"])}
+            >
+              {roles.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  aria-pressed={accessRole === role}
+                  onClick={() => {
+                    setAccessRole(role);
+                    const url = new URL(location.href);
+                    url.searchParams.set("access", role);
+                    history.replaceState(null, "", url);
+                  }}
+                >
+                  {t(statusLabels[role])}
+                </button>
+              ))}
+            </div>
+          )}
           <button
             className="language"
             onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
@@ -838,6 +870,18 @@ export default function SchoolApp() {
                   : ["Nouveau mot de passe", "كلمة مرور جديدة"],
             )}
           </h2>
+          {authMode === "login" && (
+            <div className="access-intro">
+              <strong>{t(accessAreas[accessRole].title)}</strong>
+              <p>{t(accessAreas[accessRole].description)}</p>
+              <small>
+                {t([
+                  "Votre compte détermine vos permissions après connexion.",
+                  "حسابك يحدد صلاحياتك بعد الدخول.",
+                ])}
+              </small>
+            </div>
+          )}
           <form onSubmit={auth}>
             {authMode !== "reset" && (
               <label>
@@ -952,18 +996,24 @@ export default function SchoolApp() {
         </div>
         <nav aria-label={t(["Navigation principale", "القائمة الرئيسية"])}>
           {nav
-            .filter(
-              (n) => admin || !["users", "administration"].includes(n.page),
-            )
+            .filter((n) => canOpenPage(user.role, n.page))
             .map((n) => (
               <button
                 key={n.page}
-                aria-label={t(n.label)}
+                aria-label={t(
+                  n.page === "students"
+                    ? accessAreas[user.role].students
+                    : n.label,
+                )}
                 className={"nav-item " + (page === n.page ? "active" : "")}
                 onClick={() => navigate(n.page)}
               >
                 <n.icon size={19} />
-                {t(n.label)}
+                {t(
+                  n.page === "students"
+                    ? accessAreas[user.role].students
+                    : n.label,
+                )}
                 {n.page === "notifications" &&
                   snapshot.notifications.some((v) => !v.read) && (
                     <span className="nav-count">
@@ -1041,18 +1091,13 @@ export default function SchoolApp() {
         <main className="content">
           <div className="page-heading">
             <div>
-              <span className="eyebrow">
-                {t(["ESPACE ÉCOLE", "مساحة المدرسة"])}
-              </span>
+              <span className="eyebrow">{t(accessAreas[user.role].title)}</span>
               <h1>{title}</h1>
               <p>
                 {currentKind
                   ? t(modules[currentKind].description)
                   : page === "dashboard"
-                    ? t([
-                        "Ce qui compte pour votre école, aujourd’hui.",
-                        "ما يهم مدرستك اليوم.",
-                      ])
+                    ? t(accessAreas[user.role].description)
                     : ""}
               </p>
             </div>
@@ -1189,6 +1234,7 @@ export default function SchoolApp() {
           )}
           {page === "dashboard" && (
             <Dashboard
+              role={user.role}
               records={records}
               year={yearFilter}
               name={name}
@@ -1725,6 +1771,24 @@ export default function SchoolApp() {
                   <Plus size={18} />
                   {t(["Créer un compte", "إنشاء حساب"])}
                 </button>
+              </div>
+              <div className="access-summary">
+                {roles.map((role) => (
+                  <div key={role}>
+                    <strong>
+                      {t(statusLabels[role])} ·{" "}
+                      {users.filter((u) => u.role === role && u.active).length}
+                    </strong>
+                    <p>{t(accessAreas[role].description)}</p>
+                    <a
+                      href={"/?access=" + role}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t(["Lien de connexion", "رابط الدخول"])}
+                    </a>
+                  </div>
+                ))}
               </div>
               <div className="table-scroll">
                 <table>
@@ -2730,7 +2794,7 @@ function UserForm({
               role === "teacher" ? form.getAll("classIds").map(String) : [],
             studentIds:
               role === "parent" || role === "student"
-                ? form.getAll("studentIds").map(String)
+                ? form.getAll("studentIds").map(String).filter(Boolean)
                 : [],
             active: form.get("active") === "on",
           },
@@ -2812,13 +2876,24 @@ function UserForm({
         )}
         {(role === "parent" || role === "student") && (
           <label className="full-field">
-            {t(["Élèves autorisés", "التلاميذ المسموح بالاطلاع عليهم"])}
+            {t(
+              role === "student"
+                ? ["Profil de cet élève", "ملف هذا التلميذ"]
+                : ["Enfants associés", "الأطفال المرتبطون"],
+            )}
             <select
               name="studentIds"
-              multiple
-              size={5}
-              defaultValue={user?.studentIds}
+              multiple={role === "parent"}
+              size={role === "parent" ? 5 : undefined}
+              defaultValue={
+                role === "student"
+                  ? (user?.studentIds[0] ?? "")
+                  : user?.studentIds
+              }
             >
+              {role === "student" && (
+                <option value="">{t(["À associer", "بانتظار الربط"])}</option>
+              )}
               {records
                 .filter((r) => r.kind === "students")
                 .map((r) => (
@@ -2918,6 +2993,7 @@ function Report({
   );
 }
 function Dashboard({
+  role,
   records,
   year,
   name,
@@ -2925,6 +3001,7 @@ function Dashboard({
   money,
   onNavigate,
 }: {
+  role: User["role"];
   records: RecordItem[];
   year: string;
   name: (id: unknown) => string;
@@ -2969,7 +3046,10 @@ function Dashboard({
     : null;
   const stats = [
     {
-      label: ["Élèves inscrits", "التلاميذ المسجلون"] as Label,
+      label:
+        role === "admin"
+          ? (["Élèves inscrits", "التلاميذ المسجلون"] as Label)
+          : accessAreas[role].students,
       value: String(students.length),
       note: [
         "Profils actifs et à compléter",
@@ -3024,22 +3104,24 @@ function Dashboard({
   return (
     <>
       <section className="stats">
-        {stats.map((s) => (
-          <button
-            className="stat-card"
-            key={s.page}
-            onClick={() => onNavigate(s.page)}
-          >
-            <div className="stat-top">
-              <span>{t(s.label)}</span>
-              <span className={"stat-icon " + s.tone}>
-                <s.icon size={21} />
-              </span>
-            </div>
-            <div className="stat-value">{s.value}</div>
-            <small>{t(s.note)}</small>
-          </button>
-        ))}
+        {stats
+          .filter((s) => canOpenPage(role, s.page))
+          .map((s) => (
+            <button
+              className="stat-card"
+              key={s.page}
+              onClick={() => onNavigate(s.page)}
+            >
+              <div className="stat-top">
+                <span>{t(s.label)}</span>
+                <span className={"stat-icon " + s.tone}>
+                  <s.icon size={21} />
+                </span>
+              </div>
+              <div className="stat-value">{s.value}</div>
+              <small>{t(s.note)}</small>
+            </button>
+          ))}
       </section>
       <div className="dashboard-grid">
         <section className="directory dashboard-card">
@@ -3084,25 +3166,27 @@ function Dashboard({
             ])}
           </p>
         </section>
-        <section className="directory dashboard-card">
-          <div className="directory-title">
-            <h2>{t(["Scolarité", "الرسوم الدراسية"])}</h2>
-            <Wallet size={20} />
-          </div>
-          <div className="fee-kpi">
-            <strong>{money(paid)}</strong>
-            <span>
-              {t(["encaissés sur", "تم تحصيلها من"])} {money(due)}
-            </span>
-            <div className="fee-progress">
-              <i style={{ width: (due ? (paid / due) * 100 : 0) + "%" }} />
+        {canOpenPage(role, "invoices") && (
+          <section className="directory dashboard-card">
+            <div className="directory-title">
+              <h2>{t(["Scolarité", "الرسوم الدراسية"])}</h2>
+              <Wallet size={20} />
             </div>
-            <small>
-              {invoices.length} {t(["factures", "فواتير"])} · {payments.length}{" "}
-              {t(["paiements", "دفعات"])}
-            </small>
-          </div>
-        </section>
+            <div className="fee-kpi">
+              <strong>{money(paid)}</strong>
+              <span>
+                {t(["encaissés sur", "تم تحصيلها من"])} {money(due)}
+              </span>
+              <div className="fee-progress">
+                <i style={{ width: (due ? (paid / due) * 100 : 0) + "%" }} />
+              </div>
+              <small>
+                {invoices.length} {t(["factures", "فواتير"])} ·{" "}
+                {payments.length} {t(["paiements", "دفعات"])}
+              </small>
+            </div>
+          </section>
+        )}
         <section className="directory dashboard-card">
           <div className="directory-title">
             <h2>{t(["À venir", "القادم"])}</h2>

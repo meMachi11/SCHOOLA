@@ -267,6 +267,11 @@ export async function session(req: Request, user: User) {
 export async function saveUser(actor: User, input: Record<string, unknown>) {
   const parsed = userSchema.safeParse(input.data);
   if (!parsed.success) throw new ApiError(400, parsed.error.issues[0].message);
+  if (parsed.data.role === "student" && parsed.data.studentIds.length > 1)
+    throw new ApiError(
+      400,
+      "Un compte élève doit être lié à un seul profil élève.",
+    );
   const id = typeof input.id === "string" ? input.id : crypto.randomUUID();
   if (id === actor.id && (!parsed.data.active || parsed.data.role !== "admin"))
     throw new ApiError(

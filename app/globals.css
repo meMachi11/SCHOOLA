@@ -3103,3 +3103,51 @@ body {
   font-weight: 700;
   color: #27456e;
 }
+
+.access-picker,
+.access-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.access-picker button {
+  border: 1px solid #cdd8e8;
+  border-radius: 10px;
+  background: white;
+  padding: 12px;
+  font-size: 0.875rem;
+  color: #263c59;
+  cursor: pointer;
+}
+.access-picker button[aria-pressed="true"] {
+  background: #e7efff;
+  border-color: #4266bc;
+  color: #244a99;
+}
+.access-intro p,
+.access-summary p {
+  margin: 8px 0;
+  line-height: 1.55;
+  font-size: 0.875rem;
+}
+.access-intro small {
+  color: #54647b;
+}
+.access-summary {
+  padding: 0 20px;
+}
+.access-summary > div {
+  border: 1px solid #dce3ef;
+  border-radius: 10px;
+  padding: 16px;
+}
+.access-summary a {
+  color: #2453a4;
+  font-size: 0.875rem;
+}
+@media (max-width: 600px) {
+  .access-summary {
+    grid-template-columns: 1fr;
+  }
+}

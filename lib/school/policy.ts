@@ -2,7 +2,14 @@ import { type Kind, type RecordItem, type User, type Values } from "./model";
 export function classesFor(user: User, records: RecordItem[]): string[] {
   if (user.role === "teacher") return user.classIds;
   return records
-    .filter((r) => r.kind === "students" && user.studentIds.includes(r.id))
+    .filter(
+      (r) =>
+        r.kind === "students" &&
+        (user.role === "student"
+          ? user.studentIds.slice(0, 1)
+          : user.studentIds
+        ).includes(r.id),
+    )
     .map((r) => String(r.data.classId));
 }
 export function canRead(
@@ -12,7 +19,11 @@ export function canRead(
 ): boolean {
   if (user.role === "admin") return true;
   const ownClasses = classesFor(user, records),
-    ownStudent = (id: unknown) => user.studentIds.includes(String(id));
+    ownStudent = (id: unknown) =>
+      (user.role === "student"
+        ? user.studentIds.slice(0, 1)
+        : user.studentIds
+      ).includes(String(id));
   if (["subjects", "levels", "years"].includes(r.kind)) return true;
   if (r.kind === "students")
     return user.role === "teacher"
@@ -22,7 +33,7 @@ export function canRead(
   if (r.kind === "messages")
     return r.authorId === user.id || r.data.recipientId === user.id;
   if (r.kind === "invoices")
-    return user.role !== "teacher" && ownStudent(r.data.studentId);
+    return user.role === "parent" && ownStudent(r.data.studentId);
   if (r.kind === "payments") {
     const invoice = records.find(
       (i) => i.kind === "invoices" && i.id === r.data.invoiceId,
