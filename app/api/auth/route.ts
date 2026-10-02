@@ -1,4 +1,5 @@
 import { isDemoId } from "../../../lib/school/demo-marker";
+import { activateDemoLogins } from "../../../lib/school/demo-logins";
 import { db } from "../../../lib/server";
 import {
   ApiError,
@@ -25,6 +26,7 @@ import { emailConfig, sendEmail } from "../../../lib/school/email";
 import { passwordSchema } from "../../../lib/school/model";
 export async function GET(req: Request) {
   try {
+    await activateDemoLogins();
     return json({
       user: await currentUser(req),
       emailRecovery: !!(await emailConfig()),
@@ -39,6 +41,7 @@ export async function POST(req: Request) {
     const data = await body(req),
       action = data.action;
     if (action === "login") {
+      await activateDemoLogins();
       const email = String(data.email ?? "")
         .toLowerCase()
         .trim();

@@ -4,7 +4,7 @@ The site enables `SCOLA_DEMO_DATA=enabled`. On the next administrator snapshot, 
 
 The connected dataset includes one school year, two levels/classes, three subjects, eight students (including an archived profile), two teachers, four parents, two student accounts and one fictional administrator. It includes seven days of attendance, four homework assignments, four assessments with sixteen grades, two fee schedules, sixteen invoices and six payments in MAD, three calendar events, three announcements and three downloadable sample PDFs. Each real administrator receives a sample conversation and six in-app notifications.
 
-A banner, record badges and print labels identify the examples. Fictional account names start with `[Démo]`, use reserved `.test` email addresses and have no password or linked login identity. They demonstrate role and relationship data; they are not accounts for signing in.
+A banner, record badges and print labels identify the examples. Fictional account names start with `[Démo]`, use reserved `.test` email addresses and start without passwords or linked identities. Four reserved examples can be activated for password sign-in through the explicitly configured secret `SCOLA_DEMO_LOGIN_HASHES`; the remaining accounts are relationship fixtures. This setting holds salted password hashes, never plaintext passwords.
 
 Sample notifications are inserted locally. Changes to demo records, demo fee reminders, password recovery for fictional accounts and pushes to fictional users do not send external messages. Real records continue using the normal notification rules. Auth, password-reset delivery and device push still require real account/provider/device configuration; fixtures do not verify those external services.
 

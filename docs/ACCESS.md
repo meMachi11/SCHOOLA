@@ -11,6 +11,6 @@ Each person has their own account, assigned by an administrator under **Utilisat
 
 Administrators alone create or change roles. A student account may be associated with at most one profile. Unlinked parent/student accounts cannot view student records; teachers without class assignments cannot view or change class records. Role edits revoke existing app sessions. Server checks protect API requests and document access independently of navigation. Existing site visitor restrictions still apply before app login; a school account does not change Sites workspace/visitor membership.
 
-Demo accounts remain fictional records without passwords. Create individual accounts for real people; never share the administrator login.
+Four demo logins are enabled for testing: `admin@scola.example.test`, `teacher-1@scola.example.test`, `parent-0@scola.example.test`, and `learner-0@scola.example.test`. Passwords are delivered privately, never stored in source. The teacher has CM1 A, the parent has Yasmine and Adam, and the student has Yasmine. The demo administrator has full school permissions. Role links explicitly show password sign-in even if another school account or ChatGPT identity is already signed in. Create individual accounts for real people.
 
 For repeatable checks, enable the virtual dataset in a disposable local database, configure `SCOLA_OWNER_EMAIL=owner@example.test`, start the built preview at localhost:4173 and run `node scripts/verify-access.mjs`. The test creates local accounts and refuses non-local targets.

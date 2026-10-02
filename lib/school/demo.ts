@@ -1,9 +1,10 @@
 import { bucket, db } from "../server";
 import { hash, now, runtime } from "./auth";
 import { demoId } from "./demo-marker";
+import { activateDemoLogins } from "./demo-logins";
 import { schemas, type Kind, type User, type Values } from "./model";
 
-// Idempotent sample-data backfill. No real-user credentials or deliveries are created.
+// Idempotent sample-data backfill. Real accounts and external deliveries are untouched.
 export async function loadDemo(actor: User, requested = false) {
   if (actor.role !== "admin") return;
   if (!requested && runtime().SCOLA_DEMO_DATA !== "enabled") return;
@@ -363,6 +364,7 @@ export async function loadDemo(actor: User, requested = false) {
     ]);
   }
   await demoInbox(actor, teacherIds[0], instant);
+  await activateDemoLogins();
 }
 
 async function demoInbox(actor: User, teacherId: string, instant: string) {

@@ -13,6 +13,7 @@ export type Runtime = {
   SCOLA_OWNER_EMAIL?: string;
   SCOLA_INITIAL_ADMIN_EMAILS?: string;
   SCOLA_DEMO_DATA?: string;
+  SCOLA_DEMO_LOGIN_HASHES?: string;
   SCOLA_ORIGIN?: string;
   EMAIL_PROVIDER?: string;
   EMAIL_API_KEY?: string;

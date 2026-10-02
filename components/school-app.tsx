@@ -241,6 +241,9 @@ export default function SchoolApp() {
       if (roles.includes(requestedAccess as User["role"]))
         setAccessRole(requestedAccess as User["role"]);
       try {
+        // An explicit role link opens password sign-in, even with an existing
+        // ChatGPT identity or school session. Permissions still come from login.
+        if (roles.includes(requestedAccess as User["role"]) && !token) return;
         const value = await refresh();
         if (!alive) return;
         setPending(
@@ -2075,8 +2078,8 @@ export default function SchoolApp() {
                   <h2>{t(["École virtuelle", "المدرسة الافتراضية"])}</h2>
                   <p>
                     {t([
-                      "Exemples connectés : élèves, familles, classes, présence, devoirs, notes, factures, reçus et documents PDF. Les comptes fictifs n’ont pas de mot de passe et aucune communication externe n’est envoyée.",
-                      "أمثلة مترابطة للتلاميذ والعائلات والأقسام والحضور والواجبات والنقط والفواتير والوثائق. الحسابات الخيالية بلا كلمات مرور ولا تُرسل اتصالات خارجية.",
+                      "Exemples connectés : élèves, familles, classes, présence, devoirs, notes, factures, reçus et documents PDF. Aucune communication externe n’est envoyée pour ces exemples.",
+                      "أمثلة مترابطة للتلاميذ والعائلات والأقسام والحضور والواجبات والنقط والفواتير والوثائق. لا تُرسل اتصالات خارجية لهذه الأمثلة.",
                     ])}
                   </p>
                   <button
